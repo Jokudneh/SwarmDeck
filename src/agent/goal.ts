@@ -258,7 +258,10 @@ function normalize(raw: any): ThreadGoal {
   const status = isStatus(raw?.status) ? raw.status : 'active';
   return {
     goalId: typeof raw?.goalId === 'string' && raw.goalId ? raw.goalId : `goal_${crypto.randomBytes(6).toString('hex')}`,
-    objective: typeof raw?.objective === 'string' ? raw.objective : '',
+    // MAX_OBJECTIVE_CHARS is enforced when a goal is written, but a goal.json edited by
+    // hand or written by an older build bypassed it and the whole objective ended up in
+    // every prompt. Clamp on read as well, so the invariant holds for every entry path.
+    objective: typeof raw?.objective === 'string' ? raw.objective.slice(0, MAX_OBJECTIVE_CHARS) : '',
     status,
     tokenBudget: typeof raw?.tokenBudget === 'number' && raw.tokenBudget > 0 ? Math.floor(raw.tokenBudget) : null,
     tokensUsed: typeof raw?.tokensUsed === 'number' && raw.tokensUsed >= 0 ? Math.floor(raw.tokensUsed) : 0,
